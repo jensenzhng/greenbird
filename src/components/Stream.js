@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 
 function Stream() {
     const [currentControl, setCurrentControl] = useState(undefined);
-    const socket = new WebSocket('ws://greenbird-12.herokuapp.com/');
+    const [socket, setSocket] = useState(undefined);
+    
     //dummy data; using webcam to simulate streaming from the drone
     const stream = () => {
         let constraints = { 
@@ -27,31 +28,9 @@ function Stream() {
             })
     }
 
-    const setUpWebsocket = () => {
-
-        function heartbeat() {
-            clearTimeout(this.pingTimeout);
-
-            this.pingTimeout = setTimeout(() => {
-                this.terminate();
-            }, 30000 + 1000);
-        }
-
-        socket.addEventListener('open', function (event) {
-            socket.send('Hello Server!');
-        });
-
-        socket.onmessage = function (event) {
-            let msg = JSON.parse(event.data);
-            console.log(msg);
-            setCurrentControl(msg)
-        };
-
-
-        // socket.onclose(() => {
-        //     clearTimeout(this.pingTimeout);
-        // })
-        // socket.on('ping', heartbeat);
+    const setUpWebsocket = async () => {
+        const ws = new WebSocket('ws://greenbird-12.herokuapp.com/');
+        await setSocket(ws);
     }
 
     const checkKeyDown = (e) => {
@@ -93,11 +72,30 @@ function Stream() {
     }
 
     useEffect(() => {
-        stream();
-        detectKeyPresses();
-        setUpWebsocket()
+        async function init() {
+            await setUpWebsocket();
+        }
+        init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    useEffect(() => {
+        if (!socket) return;
+
+        console.log(socket);
+        socket.addEventListener('open', function (event) {
+            socket.send('Hello Server!');
+        });
+
+        socket.onmessage = function (event) {
+            let msg = JSON.parse(event.data);
+            console.log(msg);
+            setCurrentControl(msg)
+        };
+        detectKeyPresses();
+        stream();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [socket])
 
     return ( 
         <>
