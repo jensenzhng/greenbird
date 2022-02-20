@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import regular from '../images/joystick.png' 
+import left from '../images/joystick-left.png'
+import right from '../images/joystick-right.png'
+import up from '../images/joystick-up.png'
+import down from '../images/joystick-down.png'
 
 function Stream() {
     const [currentControl, setCurrentControl] = useState(undefined);
     const [socket, setSocket] = useState(undefined);
+    const [leftJoystick, setLeftJoystick] = useState(regular);
+    const [rightJoystick, setRightJoystick] = useState(regular);
     
     //dummy data; using webcam to simulate streaming from the drone
     const stream = () => {
@@ -72,6 +79,29 @@ function Stream() {
     }
 
     useEffect(() => {
+        if (currentControl?.msg === 'Pressed Left') {
+            setRightJoystick(left);
+        } else if (currentControl?.msg === 'Pressed Right') {
+            setRightJoystick(right);
+        } else if (currentControl?.msg === 'Pressed Up') {
+            setRightJoystick(up);
+        } else if (currentControl?.msg === 'Pressed Down') {
+            setRightJoystick(down);
+        } else if (currentControl?.msg === 'Pressed W') {
+            setLeftJoystick(up);
+        } else if (currentControl?.msg === 'Pressed A') {
+            setLeftJoystick(left);
+        } else if (currentControl?.msg === 'Pressed S') {
+            setLeftJoystick(down);
+        } else if (currentControl?.msg === 'Pressed D') {
+            setLeftJoystick(right);
+        } else {
+            setLeftJoystick(regular);
+            setRightJoystick(regular);
+        }
+    }, [currentControl])
+
+    useEffect(() => {
         async function init() {
             await setUpWebsocket();
         }
@@ -93,19 +123,20 @@ function Stream() {
             setCurrentControl(msg)
         };
         detectKeyPresses();
-        stream();
+        // stream();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [socket])
 
     return ( 
         <>
-            {/* <div className="video-stream">
-                <video autoPlay={true} id="videoElement" className='w-screen h-screen '></video>
-            </div> */}
             <div className="currentKey">
                     <h2>
                         {currentControl?.msg}
                     </h2>
+            </div>
+            <div className="joystick flex justify-between px-4 h-[200px]" >
+                <img className="no-select" draggable="false" ondragstart="return false;" src={leftJoystick} alt="" />
+                <img className="no-select" draggable="false" ondragstart="return false;" src={rightJoystick} alt="" />
             </div>
         </>
      );
